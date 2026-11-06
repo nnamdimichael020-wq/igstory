@@ -3,60 +3,46 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>IGStory Bot V2 — Dashboard</title>
+<title>IGStory Bot V2 — Control Panel</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header class="hero">
-  <pre class="banner">
-   _         _____  ___         _____  __  __    __   __  _____  ___  __
-  /_\  /\ /\/__   \/___\ /\   /\\_   \/__\/ / /\ \ \ / _\/__   \/___\/__\/\_/\
- //_\\/ / \ \ / /\//  // \ \ / / / /\/_\  \ \/  \/ / \ \   / /\//  // \//\_ _/
-/  _  \ \_/ // / / \_//   \ V /\/ /_//__   \  /\  /  _\ \ / / / \_// _  \ / \ \
-\_/ \_/\___/ \/  \___/     \_/\____/\__/    \/  \/   \__/ \/  \___/\/ \_/ \_/
-             AUTO VIEWER + LOVE FROM FOLLOWERS - V.2.4
-  </pre>
-  <p class="tagline">Live web dashboard for the Instagram story bot</p>
+  <h1>IGStory Bot V2</h1>
+  <p class="tagline">Live control panel — paste a link, pick a mode, hit run</p>
 </header>
 
 <main>
-  <section class="cards">
-    <div class="card">
-      <h2>1. Auto View Story (Following)</h2>
-      <p>Automatically views stories from all accounts you follow, mimicking human behavior.</p>
-      <span class="badge">Viewer Mode</span>
+  <section class="panel controls">
+    <label class="field">
+      <span>Instagram link or @username (for target modes)</span>
+      <input id="link" type="text" placeholder="https://instagram.com/username  or  @username  or  reel link" />
+    </label>
+
+    <div class="field">
+      <span>Mode</span>
+      <div id="mode-buttons" class="mode-buttons">
+        <button class="mode-btn active" data-mode="view_stories">👁 View Stories</button>
+        <button class="mode-btn" data-mode="love_stories">💖 Love Stories</button>
+        <button class="mode-btn" data-mode="view_reels">🎞 View Reels</button>
+        <button class="mode-btn" data-mode="love_reels">❤️ Love Reel</button>
+      </div>
     </div>
-    <div class="card">
-      <h2>2. Love First Story (Followers Target)</h2>
-      <p>Likes the first story of each follower of one or more target accounts.</p>
-      <span class="badge">Lover Mode</span>
+
+    <div class="actions">
+      <button id="run" class="run">▶ Run</button>
+      <button id="stop" class="stop">■ Stop</button>
     </div>
-    <div class="card">
-      <h2>3. Hybrid: View + Love</h2>
-      <p>Runs viewer and lover tasks in parallel, each in its own thread.</p>
-      <span class="badge">Parallel</span>
-    </div>
-    <div class="card">
-      <h2>4. Hybrid: View + View</h2>
-      <p>Views stories from both following and followers of targets simultaneously.</p>
-      <span class="badge">Parallel</span>
-    </div>
+
+    <label class="field small">
+      <span>API URL (where webapp.py runs; blank = same site)</span>
+      <input id="api-url" type="text" placeholder="https://your-backend.example.com" />
+    </label>
   </section>
 
   <section class="panel">
-    <h2>Bot Status</h2>
-    <div class="status-row"><span>Deploy</span><strong id="deploy-status">Live</strong></div>
-    <div class="status-row"><span>Backend</span><strong>Python (instagrapi)</strong></div>
-    <div class="status-row"><span>Monitoring</span><strong>Telegram alerts + health pings</strong></div>
-    <div class="status-row"><span>Anti-detection</span><strong>Random delays, UA rotation, proxy support</strong></div>
-  </section>
-
-  <section class="panel">
-    <h2>Run Locally</h2>
-    <pre class="code">git clone &lt;repo-url&gt;
-cd igstory
-pip install -r requirements.txt
-python run.py</pre>
+    <h2>Status: <strong id="status">idle</strong></h2>
+    <pre id="logs" class="logs">No runs yet.</pre>
   </section>
 </main>
 
