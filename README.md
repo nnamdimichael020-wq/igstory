@@ -57,10 +57,26 @@ An advanced Instagram bot for automatically viewing stories and interacting with
 
 ## ▶️ Usage
 
-1.  **Run the bot:**
+1.  **Run the bot (CLI):**
     ```bash
     python run.py
     ```
+
+2.  **Run the bot from the live web page:**
+    ```bash
+    pip install -r requirements.txt
+    python webapp.py     # serves the control panel + API on http://localhost:5000
+    ```
+    Open the page, paste an Instagram link/@username, switch between modes
+    (View Stories · Love Stories · View Reels · Love Latest Reel) and press **Run**.
+    The static page in `public/` is also deployed to Cloudflare via `wrangler.toml`;
+    set the page's **API URL** field to the host where `webapp.py` runs
+    (Cloudflare Workers cannot execute Python — host the API on Render/Railway/a VPS).
+
+### 🎞 Reels Modes
+- **View Reels (Target link)**: marks all reels of the target as viewed (tracked in `data/seen_reels.json`).
+- **Love Latest Reel (Target link)**: likes the target's most recent reel (tracked in `data/loved_reels.json`).
+- Accepts profile links, `@username`, or reel/post links (resolved via the API).
 
 2.  **First-Time Setup:**
     On the first run for any mode, the bot will launch an interactive setup wizard. You will be prompted to enter your Instagram credentials, Telegram details, and other settings.
