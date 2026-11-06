@@ -69,9 +69,21 @@ An advanced Instagram bot for automatically viewing stories and interacting with
     ```
     Open the page, paste an Instagram link/@username, switch between modes
     (View Stories · Love Stories · View Reels · Love Latest Reel) and press **Run**.
-    The static page in `public/` is also deployed to Cloudflare via `wrangler.toml`;
-    set the page's **API URL** field to the host where `webapp.py` runs
-    (Cloudflare Workers cannot execute Python — host the API on Render/Railway/a VPS).
+
+### 🚀 Deploying the backend (makes the live page fully functional)
+The static page is served by Cloudflare (`wrangler.toml` → `public/`), but the
+Python engine must run on a Python host. Easiest path:
+
+1. Copy `configs.example.env` to `configs/default.env` and fill in `SESSION_ID`.
+2. Deploy with the included **Dockerfile** — e.g. one-click on Render via
+   `render.yaml` ("Deploy to Render" button), or Railway/Fly.io with the same Dockerfile.
+3. Optionally set an `API_KEY` environment variable on the host; the page has an
+   **API key** field that sends it as `Authorization: Bearer …`.
+4. In the live page, set **API URL** to the backend's public URL (e.g.
+   `https://igstory-backend.onrender.com`). `GET /api/health` shows whether the
+   config is present and a session is active.
+
+Run with gunicorn in production: `gunicorn -w 2 -b 0.0.0.0:8080 webapp:app`
 
 ### 🎞 Reels Modes
 - **View Reels (Target link)**: marks all reels of the target as viewed (tracked in `data/seen_reels.json`).
