@@ -9,10 +9,10 @@ function apiBase() {
 }
 
 async function api(path, opts = {}) {
-  const res = await fetch(apiBase() + path, {
-    headers: { "Content-Type": "application/json" },
-    ...opts,
-  });
+  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  const key = $("api-key").value.trim();
+  if (key) headers["Authorization"] = "Bearer " + key;
+  const res = await fetch(apiBase() + path, { ...opts, headers });
   return res.json();
 }
 

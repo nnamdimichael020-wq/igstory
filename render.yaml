@@ -1,0 +1,11 @@
+# One-click deploy to Render: https://render.com/deploy
+# Set SESSION_ID etc. in configs/default.env (mount as a Secret File) or
+# as environment variables, and optionally API_KEY to guard the API.
+services:
+  - type: web
+    name: igstory-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: API_KEY
+        sync: false   # set your own secret in the Render dashboard

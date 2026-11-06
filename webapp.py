@@ -9,9 +9,11 @@ The Cloudflare Worker serves the static page from public/; point the page's
 "API URL" setting at the host where this Flask app runs (e.g. your Render /
 Railway / VPS URL), since Cloudflare Workers cannot execute Python.
 """
+import os
 import threading
 import time
 import traceback
+from functools import wraps
 from pathlib import Path
 
 from flask import Flask, request, jsonify, send_from_directory
@@ -29,6 +31,21 @@ BASE_DIR = Path(__file__).parent
 PUBLIC_DIR = BASE_DIR / "public"
 
 app = Flask(__name__, static_folder=str(PUBLIC_DIR), static_url_path="")
+
+# Optional shared-secret guard: set API_KEY in the environment to require
+# "Authorization: Bearer <API_KEY>" on /api/* endpoints.
+API_KEY = os.environ.get("API_KEY", "")
+
+def require_key(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if API_KEY:
+            provided = request.headers.get("Authorization", "").replace("Bearer ", "") \
+                       or request.args.get("key", "")
+            if provided != API_KEY:
+                return jsonify({"error": "unauthorized"}), 401
+        return fn(*args, **kwargs)
+    return wrapper
 
 MODES = {
     "view_stories": ("View Stories (Following)", viewer_task),
@@ -108,12 +125,20 @@ def index():
     return send_from_directory(PUBLIC_DIR, "index.html")
 
 
+@app.route("/api/health")
+def api_health():
+    env_ok = (BASE_DIR / "configs" / "default.env").exists()
+    return jsonify({"ok": True, "configured": env_ok, "logged_in": _client is not None})
+
+
 @app.route("/api/modes")
+@require_key
 def modes():
     return jsonify({k: v[0] for k, v in MODES.items()})
 
 
 @app.route("/api/run", methods=["POST"])
+@require_key
 def api_run():
     data = request.get_json(force=True)
     mode = data.get("mode", "")
