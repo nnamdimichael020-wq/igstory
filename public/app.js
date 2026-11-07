@@ -95,6 +95,10 @@ async function refresh() {
     const h = (s.history || []).slice(-10).reverse()
       .map((j) => `[${j.time}] #${j.id} c${j.cycle} ${j.modes.join("+")} -> ${j.status}${j.result != null ? ` (${j.result})` : ""}${j.error ? " ERR: " + j.error : ""}`)
       .join("\n");
+    const jl = jobs.slice(-10).reverse()
+      .map((j) => `#${j.id} [${j.status}${j.paused ? " ⏸" : ""}${j.muted ? " 🔕" : ""}] ${(j.modes || []).join("+")} c${(j.progress && j.progress.cycle) || 0} · ${(j.progress && j.progress.actions) || 0} actions`)
+      .join("\n");
+    $("jobs").textContent = jl || "No jobs yet.";
     $("history").textContent = h || "No history yet.";
     if (!anyActive) { clearInterval(pollTimer); pollTimer = null; }
   } catch (e) {
