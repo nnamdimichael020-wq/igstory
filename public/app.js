@@ -1,6 +1,6 @@
 // IGStory Bot V2 — control panel
 const $ = (id) => document.getElementById(id);
-let mode = "view_stories";
+let modes = new Set(["view_stories"]);
 let pollTimer = null;
 
 function apiBase() {
@@ -30,7 +30,12 @@ $("run").addEventListener("click", async () => {
   try {
     const res = await api("/api/run", {
       method: "POST",
-      body: JSON.stringify({ modes: [...modes], link: $("link").value, views: $("views").value }),
+      body: JSON.stringify({
+        modes: [...modes],
+        link: $("link").value,
+        views: $("views").value,
+        interval: $("interval").value,
+      }),
     });
     if (res.error) {
       $("logs").textContent = "Error: " + res.error;
@@ -59,6 +64,10 @@ async function refresh() {
     $("status").className = s.status;
     $("logs").textContent = (s.logs || []).join("\n") || "No runs yet.";
     $("logs").scrollTop = $("logs").scrollHeight;
+    const h = (s.history || []).slice(-10).reverse()
+      .map((j) => `[${j.time}] #${j.id} c${j.cycle} ${j.modes.join("+")} -> ${j.status}${j.result != null ? ` (${j.result})` : ""}${j.error ? " ERR: " + j.error : ""}`)
+      .join("\n");
+    $("history").textContent = h || "No history yet.";
     if (s.status !== "running") {
       clearInterval(pollTimer);
       pollTimer = null;

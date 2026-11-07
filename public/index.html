@@ -27,12 +27,18 @@
         <button class="mode-btn" data-mode="view_reels">🎞 View Reels</button>
         <button class="mode-btn" data-mode="love_reels">❤️ Love Reel</button>
         <button class="mode-btn" data-mode="watch_reel">🔁 Watch Reel ×N</button>
+        <button class="mode-btn" data-mode="follower_viewer">👀 View Followers' Stories</button>
       </div>
     </div>
 
     <label class="field small">
       <span>Views count (for Watch Reel ×N)</span>
       <input id="views" type="number" min="1" max="500" value="10" />
+    </label>
+
+    <label class="field small">
+      <span>Auto-repeat every N minutes (0 = run once)</span>
+      <input id="interval" type="number" min="0" max="1440" value="0" />
     </label>
 
     <div class="actions">
@@ -54,6 +60,11 @@
   <section class="panel">
     <h2>Status: <strong id="status">idle</strong></h2>
     <pre id="logs" class="logs">No runs yet.</pre>
+  </section>
+
+  <section class="panel">
+    <h2>Run history</h2>
+    <pre id="history" class="logs small">No history yet.</pre>
   </section>
 </main>
 
