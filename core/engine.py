@@ -235,7 +235,11 @@ class BotEngine:
                     break
                 cycle += 1
                 total = 0
-                for mode in modes:
+                from . import humanize
+                self._log(job_id, f"Session behavior: {' → '.join(humanize.multi_action_sequence())}")
+                cycle_modes = list(modes)
+                random.shuffle(cycle_modes)  # interest drift: order varies per cycle
+                for mode in cycle_modes:
                     if ev.is_set():
                         break
                     self._wait_if_paused(job_id)
@@ -268,7 +272,15 @@ class BotEngine:
 
                 if interval <= 0 or ev.is_set():
                     break
-                wait_until = time.time() + interval * 60
+                # irregular gap between cycles: sometimes the configured interval,
+                # sometimes a natural time-of-day gap / session-length break
+                from . import humanize
+                if random.random() < 0.5:
+                    gap_min = interval * 60
+                else:
+                    gap_min = humanize.time_of_day_gap()
+                self._log(job_id, f"Break: {gap_min/60:.1f} min until next session (session length was {humanize.session_length():.0f} min pattern).")
+                wait_until = time.time() + gap_min
                 while time.time() < wait_until and not ev.is_set():
                     time.sleep(1)
 
