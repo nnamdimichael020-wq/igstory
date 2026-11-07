@@ -41,7 +41,7 @@ def view_reels_task(cl: Client, config: dict):
     SEEN = load_history(SEEN_REELS_FILE)
     try:
         target_id = cl.user_id_from_username(target)
-        reels = cl.user_reels(target_id, amount=config.get("MAX_REELS", 30))
+        reels = cl.user_clips(target_id, amount=config.get("MAX_REELS", 30))
     except Exception as e:
         log_message(f"Reels: could not fetch reels for @{target}: {e}")
         return 0
@@ -71,7 +71,7 @@ def watch_reel_task(cl: Client, config: dict):
         if not code:
             # profile link — use the latest reel
             target_id = cl.user_id_from_username(target)
-            reels = cl.user_reels(target_id, amount=1)
+            reels = cl.user_clips(target_id, amount=1)
             if not reels:
                 log_message(f"Reel watcher: @{target} has no reels.")
                 return 0
@@ -94,7 +94,7 @@ def love_first_reel_task(cl: Client, config: dict):
     LOVED = load_history(LOVED_FILE)
     try:
         target_id = cl.user_id_from_username(target)
-        reels = cl.user_reels(target_id, amount=1)
+        reels = cl.user_clips(target_id, amount=1)
     except Exception as e:
         log_message(f"Reels lover: could not fetch reels for @{target}: {e}")
         return 0
