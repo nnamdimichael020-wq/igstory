@@ -44,6 +44,7 @@ $("run").addEventListener("click", async () => {
 });
 
 $("stop").addEventListener("click", () => api("/api/stop", { method: "POST" }).then(startPolling));
+$("clear").addEventListener("click", () => api("/api/clear", { method: "POST" }).then(refresh));
 
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);

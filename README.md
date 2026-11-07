@@ -110,7 +110,10 @@ is ever pasted somewhere public, revoke it immediately.
   watch fetches the reel like a real play, with human-like delays).
 - Accepts profile links, `@username`, or reel/post links (resolved via the API).
 - **Multi-mode**: the web panel lets you select several modes at once; they run sequentially
-  in one job (`POST /api/run` accepts `{"modes": [...], "link": ..., "views": N}`).
+  in one job (`POST /api/run` accepts `{"modes": [...], "link": ..., "views": N, "interval": M}`).
+- **Follower Viewer** is also available as a web mode (views stories of a target's followers).
+- **Auto-repeat**: set "Auto-repeat every N minutes" on the panel to keep running cycles
+  until you press Stop. **Run history** and a **Clear** button are on the page.
 
 2.  **First-Time Setup:**
     On the first run for any mode, the bot will launch an interactive setup wizard. You will be prompted to enter your Instagram credentials, Telegram details, and other settings.
