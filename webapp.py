@@ -99,6 +99,39 @@ def api_clear():
     return jsonify({"ok": True})
 
 
+@app.route("/api/pause", methods=["POST"])
+@require_key
+def api_pause():
+    data = request.get_json(silent=True) or {}
+    engine.pause(data.get("job_id"))
+    return jsonify({"ok": True})
+
+
+@app.route("/api/resume", methods=["POST"])
+@require_key
+def api_resume():
+    data = request.get_json(silent=True) or {}
+    engine.resume(data.get("job_id"))
+    return jsonify({"ok": True})
+
+
+@app.route("/api/mute", methods=["POST"])
+@require_key
+def api_mute():
+    data = request.get_json(force=True)
+    engine.set_mute(data.get("job_id"), bool(data.get("muted", True)))
+    return jsonify({"ok": True})
+
+
+@app.route("/api/heartbeat")
+@require_key
+def api_heartbeat():
+    import time as _time
+    with engine.lock:
+        hb = dict(engine.heartbeat)
+    return jsonify({"heartbeat": hb, "now": _time.strftime("%H:%M:%S")})
+
+
 @app.route("/api/blacklist", methods=["GET"])
 @require_key
 def api_blacklist_get():

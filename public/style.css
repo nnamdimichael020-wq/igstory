@@ -69,6 +69,12 @@ input[type="text"]:focus { outline: 2px solid #e1306c; }
 }
 .logs.small { height: 140px; color: #c4b5fd; }
 
+.heartbeat { font-size: .75rem; color: #a08fc0; margin-left: .75rem; }
+.heartbeat.alive { color: #f472b6; animation: pulse 1.5s infinite; }
+@keyframes pulse { 50% { opacity: .4; } }
+
+.progress { font-size: .8rem; color: #facc15; margin-bottom: .5rem; min-height: 1em; }
+
 .logs {
   background: #12041f;
   border-radius: 8px;
