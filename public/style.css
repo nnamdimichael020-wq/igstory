@@ -63,6 +63,11 @@ input[type="text"]:focus { outline: 2px solid #e1306c; }
   padding: .6rem 1.2rem; border: none; border-radius: 8px;
   background: #f87171; color: #450a0a; font-weight: 700; cursor: pointer;
 }
+.clear {
+  padding: .6rem 1.2rem; border: 1px solid rgba(255,255,255,.3); border-radius: 8px;
+  background: transparent; color: #cfc0e0; cursor: pointer;
+}
+.logs.small { height: 140px; color: #c4b5fd; }
 
 .logs {
   background: #12041f;

@@ -25,6 +25,7 @@ from core.auth import handle_login
 from core.viewer import viewer_task
 from core.lover import lover_task
 from core.reels import view_reels_task, love_first_reel_task, watch_reel_task, resolve_target
+from core.follower_viewer import follower_viewer_task
 
 setup_logger()
 
@@ -57,7 +58,10 @@ MODES = {
     "view_reels":   ("View Reels (Target link)", view_reels_task),
     "love_reels":   ("Love Latest Reel (Target link)", love_first_reel_task),
     "watch_reel":   ("Watch Reel N Times (reel link)", watch_reel_task),
+    "follower_viewer": ("View Stories of Followers (Target link)", follower_viewer_task),
 }
+
+TARGET_MODES = ("love_stories", "view_reels", "love_reels", "watch_reel", "follower_viewer")
 
 # Shared state
 _state_lock = threading.Lock()
@@ -151,30 +155,42 @@ def api_run():
         return jsonify({"error": "Unknown mode"}), 400
     link = (data.get("link") or "").strip()
     views = data.get("views", 1)
+    interval_min = max(0, int(data.get("interval", 0) or 0))
     with _state_lock:
         if _job["status"] == "running":
             return jsonify({"error": "A job is already running"}), 409
         job_id = int(time.time())
-    t = threading.Thread(target=run_job, args=(job_id, modes, link, views), daemon=True)
+    t = threading.Thread(target=run_job, args=(job_id, modes, link, views, interval_min), daemon=True)
     t.start()
     return jsonify({"job_id": job_id, "status": "running"})
 
 
 @app.route("/api/status")
+@require_key
 def api_status():
     with _state_lock:
-        return jsonify(dict(_job))
+        return jsonify({**_job, "history": list(_history)})
 
 
 @app.route("/api/stop", methods=["POST"])
+@require_key
 def api_stop():
-    # Threads are daemonized; we just mark the job stopped.
-    global _job
+    _stop_event.set()
     with _state_lock:
         if _job["status"] == "running":
             _job["status"] = "stopped"
             append_log("Stop requested (finishes current action, then halts).")
     return jsonify({"status": "stopped"})
+
+
+@app.route("/api/clear", methods=["POST"])
+@require_key
+def api_clear():
+    global _history
+    with _state_lock:
+        _job["logs"] = []
+        _history = []
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":
