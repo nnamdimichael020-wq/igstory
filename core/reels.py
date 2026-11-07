@@ -58,6 +58,35 @@ def view_reels_task(cl: Client, config: dict):
     return viewed
 
 
+def watch_reel_task(cl: Client, config: dict):
+    """'Watch' a specific reel link VIEWS times (best-effort play registration).
+
+    Instagram has no official 'seen' API for reels, so each watch fetches the
+    reel's info (which is what a real client play does) with human-like delays.
+    """
+    target = config["TARGET"]
+    views = int(config.get("VIEWS", 1))
+    try:
+        code = target.split(":", 1)[1] if target.startswith("__media__:") else None
+        if not code:
+            # profile link — use the latest reel
+            target_id = cl.user_id_from_username(target)
+            reels = cl.user_reels(target_id, amount=1)
+            if not reels:
+                log_message(f"Reel watcher: @{target} has no reels.")
+                return 0
+            code = reels[0].code
+        for i in range(views):
+            cl.media_info(code)
+            log_message(f"Watched reel https://instagram.com/reel/{code}/ (view {i + 1}/{views})")
+            time.sleep(random.uniform(3, 7))
+        log_message(f"Reel watcher: {views} views registered on reel /{code}/.")
+        return views
+    except Exception as e:
+        log_message(f"Reel watcher failed: {e}")
+        return 0
+
+
 def love_first_reel_task(cl: Client, config: dict):
     """Like the latest (first) reel of the target account."""
     target = config["TARGET"]

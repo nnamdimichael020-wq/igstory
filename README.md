@@ -105,7 +105,12 @@ is ever pasted somewhere public, revoke it immediately.
 ### 🎞 Reels Modes
 - **View Reels (Target link)**: marks all reels of the target as viewed (tracked in `data/seen_reels.json`).
 - **Love Latest Reel (Target link)**: likes the target's most recent reel (tracked in `data/loved_reels.json`).
+- **Watch Reel ×N (reel link)**: watches a specific reel the number of times set in the
+  **Views count** field (best-effort — Instagram has no official reel-seen API, so each
+  watch fetches the reel like a real play, with human-like delays).
 - Accepts profile links, `@username`, or reel/post links (resolved via the API).
+- **Multi-mode**: the web panel lets you select several modes at once; they run sequentially
+  in one job (`POST /api/run` accepts `{"modes": [...], "link": ..., "views": N}`).
 
 2.  **First-Time Setup:**
     On the first run for any mode, the bot will launch an interactive setup wizard. You will be prompted to enter your Instagram credentials, Telegram details, and other settings.

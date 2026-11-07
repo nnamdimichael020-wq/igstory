@@ -20,14 +20,20 @@
     </label>
 
     <div class="field">
-      <span>Mode</span>
+      <span>Mode — click to select, click several for multi-mode</span>
       <div id="mode-buttons" class="mode-buttons">
         <button class="mode-btn active" data-mode="view_stories">👁 View Stories</button>
         <button class="mode-btn" data-mode="love_stories">💖 Love Stories</button>
         <button class="mode-btn" data-mode="view_reels">🎞 View Reels</button>
         <button class="mode-btn" data-mode="love_reels">❤️ Love Reel</button>
+        <button class="mode-btn" data-mode="watch_reel">🔁 Watch Reel ×N</button>
       </div>
     </div>
+
+    <label class="field small">
+      <span>Views count (for Watch Reel ×N)</span>
+      <input id="views" type="number" min="1" max="500" value="10" />
+    </label>
 
     <div class="actions">
       <button id="run" class="run">▶ Run</button>

@@ -24,7 +24,7 @@ from utils.config import load_config
 from core.auth import handle_login
 from core.viewer import viewer_task
 from core.lover import lover_task
-from core.reels import view_reels_task, love_first_reel_task, resolve_target
+from core.reels import view_reels_task, love_first_reel_task, watch_reel_task, resolve_target
 
 setup_logger()
 
@@ -56,6 +56,7 @@ MODES = {
     "love_stories": ("Love Stories (Followers of Target)", lover_task),
     "view_reels":   ("View Reels (Target link)", view_reels_task),
     "love_reels":   ("Love Latest Reel (Target link)", love_first_reel_task),
+    "watch_reel":   ("Watch Reel N Times (reel link)", watch_reel_task),
 }
 
 # Shared state
@@ -145,15 +146,16 @@ def modes():
 @require_key
 def api_run():
     data = request.get_json(force=True)
-    mode = data.get("mode", "")
-    link = (data.get("link") or "").strip()
-    if mode not in MODES:
+    modes = data.get("modes") or ([data["mode"]] if data.get("mode") else [])
+    if not modes or any(m not in MODES for m in modes):
         return jsonify({"error": "Unknown mode"}), 400
+    link = (data.get("link") or "").strip()
+    views = data.get("views", 1)
     with _state_lock:
         if _job["status"] == "running":
             return jsonify({"error": "A job is already running"}), 409
         job_id = int(time.time())
-    t = threading.Thread(target=run_job, args=(job_id, mode, link), daemon=True)
+    t = threading.Thread(target=run_job, args=(job_id, modes, link, views), daemon=True)
     t.start()
     return jsonify({"job_id": job_id, "status": "running"})
 

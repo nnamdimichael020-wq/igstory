@@ -18,9 +18,10 @@ async function api(path, opts = {}) {
 
 document.querySelectorAll(".mode-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    mode = btn.dataset.mode;
+    const m = btn.dataset.mode;
+    if (modes.has(m)) { modes.delete(m); btn.classList.remove("active"); }
+    else { modes.add(m); btn.classList.add("active"); }
+    if (modes.size === 0) { modes.add(m); btn.classList.add("active"); } // keep at least one
   });
 });
 
@@ -29,7 +30,7 @@ $("run").addEventListener("click", async () => {
   try {
     const res = await api("/api/run", {
       method: "POST",
-      body: JSON.stringify({ mode, link: $("link").value }),
+      body: JSON.stringify({ modes: [...modes], link: $("link").value, views: $("views").value }),
     });
     if (res.error) {
       $("logs").textContent = "Error: " + res.error;
