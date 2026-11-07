@@ -115,6 +115,13 @@ is ever pasted somewhere public, revoke it immediately.
 - **Auto-repeat**: set "Auto-repeat every N minutes" on the panel to keep running cycles
   until you press Stop. **Run history** and a **Clear** button are on the page.
 
+### 🏭 Server-side bot engine (`core/engine.py`)
+The web backend runs a **job queue with a pool of worker threads** (default 2). Each
+worker owns its own Instagram session (thread-local login), so multiple jobs run
+concurrently. Run history and cumulative stats persist to `data/stats.json`.
+API: `POST /api/run` (queue a job), `GET /api/status` (workers, queue, jobs, history,
+stats), `POST /api/stop`, `POST /api/clear`, `GET/POST /api/blacklist`.
+
 2.  **First-Time Setup:**
     On the first run for any mode, the bot will launch an interactive setup wizard. You will be prompted to enter your Instagram credentials, Telegram details, and other settings.
 
