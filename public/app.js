@@ -35,6 +35,8 @@ $("run").addEventListener("click", async () => {
         link: $("link").value,
         views: $("views").value,
         interval: $("interval").value,
+        like_ratio: parseFloat($("like-ratio").value) || 0,
+        comment_ratio: parseFloat($("comment-ratio").value) || 0,
       }),
     });
     if (res.error) $("logs").textContent = "Error: " + res.error;

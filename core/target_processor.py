@@ -42,7 +42,11 @@ def process_target_followers(cl: Client, config: dict, action_function: Callable
                     detailed_logs.append(f"• {log_line}")
                     total_actions += actions_done
 
-        time.sleep(random.uniform(config[f"{summary_template['mode'].upper()}_MIN_DELAY"], config[f"{summary_template['mode'].upper()}_MAX_DELAY"]))
+        from . import humanize
+        humanize.sleep_human(
+            config.get(f"{summary_template['mode'].upper()}_MIN_DELAY", 6),
+            config.get(f"{summary_template['mode'].upper()}_MAX_DELAY", 12),
+        )
     
     save_history(history_file, HISTORY)
 

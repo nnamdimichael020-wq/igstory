@@ -40,7 +40,8 @@ def viewer_task(cl: Client, config: dict):
             log_message(log_line)
             detailed_logs.append(f"• {log_line}")
             viewed += len(new_pks)
-        time.sleep(random.uniform(config['VIEWER_MIN_DELAY'], config['VIEWER_MAX_DELAY']))
+        from . import humanize
+        humanize.sleep_human(config['VIEWER_MIN_DELAY'], config['VIEWER_MAX_DELAY'])
     save_history(SEEN_FILE, SEEN)
 
     summary_msg = f"✅ *Viewer Cycle Complete*\nTotal stories viewed: {viewed}"
