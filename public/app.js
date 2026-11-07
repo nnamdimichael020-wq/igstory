@@ -60,15 +60,18 @@ function startPolling() {
 async function refresh() {
   try {
     const s = await api("/api/status");
-    $("status").textContent = s.status + (s.result != null ? ` (${s.result} actions)` : "");
-    $("status").className = s.status;
-    $("logs").textContent = (s.logs || []).join("\n") || "No runs yet.";
+    const jobs = s.jobs || [];
+    const cur = jobs[jobs.length - 1] || { status: "idle", logs: [] };
+    const anyRunning = jobs.some((j) => j.status === "running" || j.status === "queued");
+    $("status").textContent = `${cur.status} · queue ${s.queue} · workers ${s.workers} · total actions ${s.stats.total_actions}`;
+    $("status").className = cur.status;
+    $("logs").textContent = (cur.logs || []).join("\n") || "No runs yet.";
     $("logs").scrollTop = $("logs").scrollHeight;
     const h = (s.history || []).slice(-10).reverse()
       .map((j) => `[${j.time}] #${j.id} c${j.cycle} ${j.modes.join("+")} -> ${j.status}${j.result != null ? ` (${j.result})` : ""}${j.error ? " ERR: " + j.error : ""}`)
       .join("\n");
     $("history").textContent = h || "No history yet.";
-    if (s.status !== "running") {
+    if (!anyRunning) {
       clearInterval(pollTimer);
       pollTimer = null;
     }
