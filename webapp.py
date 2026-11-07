@@ -17,6 +17,7 @@ from functools import wraps
 from pathlib import Path
 
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 
 from utils.logger import setup_logger, log_message
 from utils.config import load_config
@@ -31,6 +32,9 @@ BASE_DIR = Path(__file__).parent
 PUBLIC_DIR = BASE_DIR / "public"
 
 app = Flask(__name__, static_folder=str(PUBLIC_DIR), static_url_path="")
+# The live page is served from the Cloudflare Worker domain, so API calls from
+# it are cross-origin — allow them.
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Optional shared-secret guard: set API_KEY in the environment to require
 # "Authorization: Bearer <API_KEY>" on /api/* endpoints.
