@@ -8,4 +8,4 @@ __pycache__/
 venv/
 .venv/
 env/
-__pycache__/
+__pycache__/blacklist.txt
