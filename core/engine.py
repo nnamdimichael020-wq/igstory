@@ -93,7 +93,8 @@ class BotEngine:
         return cl
 
     # ---------- public API ----------
-    def submit(self, modes, link="", views=1, interval_min=0) -> int:
+    def submit(self, modes, link="", views=1, interval_min=0,
+               like_ratio=None, comment_ratio=None) -> int:
         job_id = int(time.time() * 1000) % 10**10
         ev = threading.Event()
         with self.lock:
@@ -102,6 +103,7 @@ class BotEngine:
                 "interval": interval_min, "status": "queued", "logs": [],
                 "result": None, "error": None, "queued_at": time.strftime("%H:%M:%S"),
                 "paused": False, "muted": False,
+                "like_ratio": like_ratio, "comment_ratio": comment_ratio,
                 "progress": {"cycle": 0, "actions": 0},
             }
             self._stop_events[job_id] = ev

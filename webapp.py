@@ -74,6 +74,8 @@ def api_run():
         link=(data.get("link") or "").strip(),
         views=data.get("views", 1),
         interval_min=max(0, int(data.get("interval", 0) or 0)),
+        like_ratio=data.get("like_ratio"),
+        comment_ratio=data.get("comment_ratio"),
     )
     return jsonify({"job_id": job_id, "status": "queued"})
 

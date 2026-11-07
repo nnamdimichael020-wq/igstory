@@ -108,8 +108,22 @@ def love_first_reel_task(cl: Client, config: dict):
         log_message(f"Reels lover: latest reel of @{target} already loved.")
         return 0
 
-    cl.media_like(reel.pk)
-    LOVED[str(reel.pk)] = time.time()
-    save_history(LOVED_FILE, LOVED)
-    log_message(f"LOVED a reel from @{target}")
-    return 1
+    from . import humanize
+    acted = 0
+    like_ratio = config.get("LIKE_RATIO", humanize.DEFAULT_LIKE_RATIO)
+    comment_ratio = config.get("COMMENT_RATIO", humanize.DEFAULT_COMMENT_RATIO)
+    if not humanize.messy_skip() and humanize.action_chance(like_ratio):
+        cl.media_like(reel.pk)
+        LOVED[str(reel.pk)] = time.time()
+        acted += 1
+        log_message(f"LOVED a reel from @{target}")
+    if humanize.action_chance(comment_ratio):
+        try:
+            cl.media_comment(reel.pk, random.choice(humanize.SAFE_COMMENTS))
+            log_message(f"Commented on reel from @{target}")
+            acted += 1
+        except Exception as e:
+            log_message(f"Comment skipped: {e}")
+    if acted:
+        save_history(LOVED_FILE, LOVED)
+    return acted
