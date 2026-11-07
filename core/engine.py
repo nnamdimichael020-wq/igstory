@@ -2,8 +2,10 @@
 Server-side bot engine: a job queue processed by a pool of worker threads.
 
 Each worker owns its own instagrapi Client (thread-local login), so multiple
-jobs can run concurrently without sharing a session. Run history and stats
-are persisted to data/stats.json so they survive restarts.
+jobs can run concurrently. Run history and stats persist to data/stats.json.
+
+Live-state features: per-job progress, pause/resume, mute (suppresses Telegram
+notifications), and a heartbeat thread that self-syncs every 60 seconds.
 """
 import json
 import queue
@@ -44,14 +46,19 @@ class BotEngine:
         self.history: list[dict] = []
         self.lock = threading.Lock()
         self._stop_events: dict[int, threading.Event] = {}
+        self._pause_events: dict[int, threading.Event] = {}
         self._tls = threading.local()
         self.stats = self._load_stats()
+        # Heartbeat: engine self-syncs every 60s (liveness stamp + stats flush)
+        self.heartbeat = {"last": None, "count": 0, "interval": 60}
         self._workers = [
             threading.Thread(target=self._worker_loop, args=(i,), daemon=True, name=f"bot-worker-{i}")
             for i in range(max_workers)
         ]
+        self._heartbeat_thread = threading.Thread(target=self._heartbeat_loop, daemon=True, name="bot-heartbeat")
         for w in self._workers:
             w.start()
+        self._heartbeat_thread.start()
 
     # ---------- persistence ----------
     def _load_stats(self) -> dict:
@@ -94,8 +101,11 @@ class BotEngine:
                 "id": job_id, "modes": list(modes), "link": link, "views": views,
                 "interval": interval_min, "status": "queued", "logs": [],
                 "result": None, "error": None, "queued_at": time.strftime("%H:%M:%S"),
+                "paused": False, "muted": False,
+                "progress": {"cycle": 0, "actions": 0},
             }
             self._stop_events[job_id] = ev
+            self._pause_events[job_id] = threading.Event()
             self.stats["total_jobs"] += 1
         self.job_queue.put(job_id)
         return job_id
@@ -106,8 +116,33 @@ class BotEngine:
             for jid in targets:
                 if jid in self._stop_events:
                     self._stop_events[jid].set()
-                if jid in self.jobs and self.jobs[jid]["status"] in ("queued", "running"):
+                if jid in self.jobs and self.jobs[jid]["status"] in ("queued", "running", "paused"):
                     self.jobs[jid]["status"] = "stopped"
+
+    def pause(self, job_id=None):
+        with self.lock:
+            targets = [job_id] if job_id else list(self.jobs)
+            for jid in targets:
+                if jid in self.jobs and self.jobs[jid]["status"] == "running":
+                    self.jobs[jid]["paused"] = True
+                    self.jobs[jid]["status"] = "paused"
+                    self._pause_events[jid].set()
+
+    def resume(self, job_id=None):
+        with self.lock:
+            targets = [job_id] if job_id else list(self.jobs)
+            for jid in targets:
+                if jid in self.jobs and self.jobs[jid]["status"] == "paused":
+                    self.jobs[jid]["paused"] = False
+                    self.jobs[jid]["status"] = "running"
+                    self._pause_events[jid].clear()
+
+    def set_mute(self, job_id=None, muted: bool = True):
+        with self.lock:
+            targets = [job_id] if job_id else list(self.jobs)
+            for jid in targets:
+                if jid in self.jobs:
+                    self.jobs[jid]["muted"] = bool(muted)
 
     def clear(self):
         with self.lock:
@@ -123,6 +158,8 @@ class BotEngine:
                 "jobs": [dict(j) for j in self.jobs.values()],
                 "history": list(self.history[-50:]),
                 "stats": dict(self.stats),
+                "heartbeat": dict(self.heartbeat),
+                "now": time.strftime("%H:%M:%S"),
             }
 
     def blacklist(self):
@@ -140,6 +177,23 @@ class BotEngine:
                 self.jobs[job_id]["logs"].append(f"[{time.strftime('%H:%M:%S')}] {line}")
                 if len(self.jobs[job_id]["logs"]) > 300:
                     self.jobs[job_id]["logs"] = self.jobs[job_id]["logs"][-300:]
+
+    def _heartbeat_loop(self):
+        """Self-sync every minute: stamp liveness and flush stats to disk."""
+        while True:
+            time.sleep(self.heartbeat["interval"])
+            with self.lock:
+                self.heartbeat["last"] = time.strftime("%H:%M:%S")
+                self.heartbeat["count"] += 1
+            self._save_stats()
+            log_message(f"♥ heartbeat #{self.heartbeat['count']} — engine alive, stats synced")
+
+    def _wait_if_paused(self, job_id):
+        ev = self._pause_events.get(job_id)
+        while ev and ev.is_set():
+            time.sleep(1)
+            if self._stop_events.get(job_id) and self._stop_events[job_id].is_set():
+                return
 
     def _worker_loop(self, worker_idx):
         while True:
@@ -167,13 +221,22 @@ class BotEngine:
             config = load_config()
             config["MAX_REELS"] = 30
             config["VIEWS"] = max(1, int(views or 1))
+            with self.lock:
+                if self.jobs[job_id]["muted"]:
+                    config["TELEGRAM_TOKEN"] = None  # muted: no notifications
             cl = self._client(config)
 
             cycle = 0
             while not ev.is_set():
+                self._wait_if_paused(job_id)
+                if ev.is_set():
+                    break
                 cycle += 1
                 total = 0
                 for mode in modes:
+                    if ev.is_set():
+                        break
+                    self._wait_if_paused(job_id)
                     if ev.is_set():
                         break
                     if mode in TARGET_MODES:
@@ -186,6 +249,8 @@ class BotEngine:
                     self._log(job_id, f"▶ Cycle {cycle} — running: {MODES[mode][0]}")
                     count = MODES[mode][1](cl, config) or 0
                     total += count
+                    with self.lock:
+                        self.jobs[job_id]["progress"] = {"cycle": cycle, "actions": total}
                     self._log(job_id, f"✔ {MODES[mode][0]} done: {count} action(s).")
 
                 with self.lock:
