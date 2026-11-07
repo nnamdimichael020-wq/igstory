@@ -72,18 +72,35 @@ An advanced Instagram bot for automatically viewing stories and interacting with
 
 ### 🚀 Deploying the backend (makes the live page fully functional)
 The static page is served by Cloudflare (`wrangler.toml` → `public/`), but the
-Python engine must run on a Python host. Easiest path:
+Python engine must run on a Python host. Pick **one** option:
 
-1. Copy `configs.example.env` to `configs/default.env` and fill in `SESSION_ID`.
-2. Deploy with the included **Dockerfile** — e.g. one-click on Render via
-   `render.yaml` ("Deploy to Render" button), or Railway/Fly.io with the same Dockerfile.
-3. Optionally set an `API_KEY` environment variable on the host; the page has an
-   **API key** field that sends it as `Authorization: Bearer …`.
-4. In the live page, set **API URL** to the backend's public URL (e.g.
-   `https://igstory-backend.onrender.com`). `GET /api/health` shows whether the
-   config is present and a session is active.
+**Option A — Free, no card: run on your own computer + Cloudflare quick tunnel**
+```bash
+cp configs.example.env configs/default.env   # fill in SESSION_ID
+chmod +x run_local_tunnel.sh
+./run_local_tunnel.sh
+```
+Install `cloudflared` once (no account/card needed). It prints a public
+`https://....trycloudflare.com` URL — paste that into the page's **API URL**.
+Downside: the backend sleeps when your computer sleeps.
+
+**Option B — Free host with no card: PythonAnywhere**
+Upload the repo, create a free "Web app" (Flask, `webapp:app`), set
+`API_KEY` in its env, and use its always-on URL.
+
+**Option C — Dockerfile on Render/Railway/Fly** (may ask for a card for
+verification): uses the included `Dockerfile` / `render.yaml`.
+
+Then, for any option:
+- Set `API_KEY` on the host; the page has an **API key** field that sends it
+  as `Authorization: Bearer …`.
+- In the live page, set **API URL** to the backend's public URL.
+- Check `GET /api/health` → should show `{"ok":true,"configured":true}`.
 
 Run with gunicorn in production: `gunicorn -w 2 -b 0.0.0.0:8080 webapp:app`
+
+⚠️ Never commit real keys. If a key (Render, Instagram session, Telegram)
+is ever pasted somewhere public, revoke it immediately.
 
 ### 🎞 Reels Modes
 - **View Reels (Target link)**: marks all reels of the target as viewed (tracked in `data/seen_reels.json`).
